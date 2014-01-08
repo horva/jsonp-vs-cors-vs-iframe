@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Presentation</title>
+  <meta charset='utf-8'>
+
+  <link rel="stylesheet" type="text/css" href="apps/rainbow/css/github.css">
+  <link rel="stylesheet" type="text/css" href="apps/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+
+  <script src="js/jquery.min.js"></script>
+  <script src="js/extend.jquery.js"></script>
+  <script src="js/presentation.js"></script>
+  <script src="apps/examples/jsonp_cors.js"></script>
+  <script src="apps/rainbow/js/rainbow.min.js"></script>
+  <script src="apps/rainbow/js/language/generic.js"></script>
+  <script src="apps/rainbow/js/language/python.js"></script>
+
+  <script type="text/javascript">
+    var base_url = 'http://192.168.1.111:8000';
+  </script>
+</head>
+
+<body>
+
+  <section class='board'>
+    <div onclick="go_to_prev_page()" class="nav-page nav-page-left">Previous page</div>
+    <div onclick="go_to_next_page()" class="nav-page nav-page-right">Next page</div>
+
+
+
+    <article>
+      <div class="main-title">
+        Making <span style="color: #32795c;">cross domain requests</span> with <span style="color: #a3b031">JavaScript</span>
+      </div>
+    </article>
+
+
+
+    <article>
+      <h1>INTRODUCTION</h1>
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12">
+            <ul>
+              <li>Cross </li>
+              <li>Techniques: JSONP, CORS, IFRAME</li>
+              <li>Implementation - useful snippets and examples</li>
+              <li>Comparison - allowed HTTP methods, browser support, security</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+    <article>
+      <h1>JSONP</h1>
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-12">
+              <ul>
+                <li>JSON with padding (JSONP)</li>
+                <li>Browser support: ANY</li>
+                <li>HTTP methods: GET</li>
+                <li>Special headers: not required</li>
+                <li>
+                  Limitations
+                  <ul>
+                    <li>Limited HTTP methods</li>
+                    <li>Error handling</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+    </article>
+
+
+    <article>
+      <h1>JSONP - USAGE</h1>
+      <div class="row">
+        <div class="col-sm-6">
+          <h2>Python (Django)</h2>
+          <pre>
+            <code data-language="python">
+  def jsonp_view_wrapper(func):
+    def inner_decorator(request, *args, **kwargs):
+      request.data = request.GET.dict() or None
+      response_data = func(request, *args, **kwargs)
+      return jsonp_response(request, response_data)
+    return wraps(func)(inner_decorator)
+
+
+  def jsonp_response(request, data):
+    return HttpResponse(
+      "%s(%s)" % (request.GET.get('callback'), json.dumps(data)),
+      content_type='application/json'
+    )
+            </code>
+          </pre>
+        </div>
+        <div class="col-sm-6">
+          <h2>Javascript (jQuery)</h2>
+          <pre>
+            <code data-language="javascript">
+  $.extend({
+    getJSONP: function(url, data, callback_fn) {
+      url += '?&callback=?';
+      if ($.isFunction(data)) {
+        callback_fn = data;
+        data = undefined;
+      }
+      $.getJSON(url, data, function(response_data) {
+        if (callback_fn) callback_fn(response_data);
+      });
+    }
+  });
+            </code>
+          </pre>
+        </div>
+      </div>
+    </article>
+
+
+
+    <article>
+      <h1>CORS</h1>
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12">
+            <ul>
+              <li>Cross-origin resource sharing (CORS)</li>
+              <li>
+                Browser support
+                <ul>
+                  <li>Chrome 3+</li>
+                  <li>Firefox 3.5+</li>
+                  <li>Opera 12+</li>
+                  <li>Safari 4+</li>
+                  <li>Internet Explorer 8+</li>
+                </ul>
+              </li>
+              <li>
+                Request headers
+                <ul>
+                  <li>Origin (Simple request)</li>
+                  <li>Access-Control-Request-Method</li>
+                  <li>Access-Control-Request-Headers</li>
+                </ul>
+              </li>
+              <li>
+                Response headers
+                <ul>
+                  <li>Access-Control-Allow-Origin (Simple request)</li>
+                  <li>Access-Control-Allow-Credentials (Simple request)</li>
+                  <li>Access-Control-Allow-Methods</li>
+                  <li>Access-Control-Allow-Headers</li>
+                  <li>Access-Control-Expose-Headers (which HTTP headers are to be exposed to the browser)</li>
+                  <li>Access-Control-Max-Age ("Preflighted request" caching in seconds)</li>
+                </ul>
+              </li>
+              <li>
+                Simple request
+                <ul>
+                  <li>
+                    Only uses GET, HEAD or POST
+                  </li>
+                  <li>Allowed content types: application/x-www-form-urlencoded, multipart/form-data, or text/plain</li>
+                </ul>
+              </li>
+              <li>
+                If request in not simple
+                <ul>
+                  <li>Browser initiates "Preflighted request" (Request Method: OPTIONS)</li>
+                  <li>Check if headers and methods are allowed by server</li>
+                </ul>
+              </li>
+              <li>
+                Credentials
+                <ul>
+                  <li>Access-Control-Allow-Credentials: true (in response header)</li>
+                  <br>
+                  <pre>
+                    <code>
+  // javascript - xhr is XMLHttpRequest object
+  xhr.withCredentials = true;
+
+  // jquery
+  $.ajaxSetup({
+    xhrFields: {
+      withCredentials: true
+    }
+  });
+                    </code>
+                  </pre>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+
+
+    <article>
+      <h1>JSONP AND CORS EXAMPLE</h1>
+      <div class="row">
+        <div class="col-sm-12">
+          <select class="request_type">
+            <option value="CORS">CORS</option>
+            <option value="JSONP">JSONP</option>
+          </select>
+        </div>
+      </div>
+      <div class="jsonp_form_holder">
+
+      </div>
+    </article>
+
+
+
+    <article>
+      <h1>COMPARISON</h1>
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12">
+            <table class="comparison">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>JSONP</th>
+                  <th>CORS</th>
+                  <th>IFRAME</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Methods</th>
+                  <td>GET</td>
+                  <td>
+                    GET, POST, HEAD (Simple Request)<br>
+                    ANY (but defined in "Preflighted Request" response).
+                  </td>
+                  <td>GET, POST</td>
+                </tr>
+                <tr>
+                  <th>Browsers</th>
+                  <td>ALL</td>
+                  <td>Chrome 3+, Firefox 3.5+, Opera 12+, Safari 4+, IE 8+</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Credentials sent by default</th>
+                  <td>Yes</td>
+                  <td>No</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Origin control</th>
+                  <td>No (Credentials are still not sent if Access-Control-Allow-Origin: *)</td>
+                  <td>Yes (can be any or specific)</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Specific</th>
+                  <td>Special response handling on client. Server must return callback id.</td>
+                  <td>Server must </td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </article>
+
+
+
+</section>
+
+</body>
+</html>
