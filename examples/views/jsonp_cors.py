@@ -62,24 +62,27 @@ def get_post_form(request, id=None):
 
 @view_wrapper
 def edit_post(request, id=None):
-    form = PostForm(request.data,
-        instance=get_object_or_404(Post, id=id)
-            if id else Post(author=request.user))
+    try:
+        form = PostForm(request.data,
+            instance=get_object_or_404(Post, id=id)
+                if id else Post(author=request.user))
 
-    if form.is_valid():
-        form.save()
-        form = PostForm(instance=Post(author=request.user))
+        if form.is_valid():
+            form.save()
+            form = PostForm(instance=Post(author=request.user))
+            return {
+                'html': _render_post_form(form),
+                'success': True,
+                'error': ''
+            }
+
         return {
             'html': _render_post_form(form),
-            'success': True,
+            'success': False,
             'error': ''
         }
-
-    return {
-        'html': _render_post_form(form),
-        'success': False,
-        'error': ''
-    }
+    except Exception as e:
+        print e
 
 
 @view_wrapper

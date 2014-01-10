@@ -20,6 +20,7 @@ $.extend({
       success: function(response_data) {
         if (callback_fn) callback_fn(response_data);
       },
+      crossDomain: true
       // headers: {
       //   'Test-Header': 'ABC'
       // }
