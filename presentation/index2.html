@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Presentation</title>
+  <meta charset='utf-8'>
+
+  <link rel="stylesheet" type="text/css" href="apps/rainbow/css/github.css">
+  <link rel="stylesheet" type="text/css" href="apps/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+
+  <script src="js/jquery.min.js"></script>
+  <script src="js/extend.jquery.js"></script>
+  <script src="js/presentation.js"></script>
+  <script src="apps/examples/jsonp_cors.js"></script>
+  <script src="apps/rainbow/js/rainbow.min.js"></script>
+  <script src="apps/rainbow/js/language/generic.js"></script>
+  <script src="apps/rainbow/js/language/python.js"></script>
+
+  <script type="text/javascript">
+    var base_url = 'http://localhost:8000';
+  </script>
+</head>
+
+<body>
+
+  <section class='board'>
+    <div onclick="go_to_prev_page()" class="nav-page nav-page-left">Previous page</div>
+    <div onclick="go_to_next_page()" class="nav-page nav-page-right">Next page</div>
+    <article>
+      <div class="main-title">
+        Making <span style="color: #32795c;">cross domain requests</span> with <span style="color: #a3b031">JavaScript</span>
+      </div>
+    </article>
+    <article>
+      <h1>INTRODUCTION</h1>
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12">
+            <ul>
+              <li>Techniques: JSONP, CORS, IFRAME</li>
+              <li>Implementation - useful snippets and examples</li>
+              <li>Pros and cons - security, browser support, HTTP methods allowed</li>
+              <li>Conslusion</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+    <article>
+      <h1>JSONP</h1>
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-12">
+              <ul>
+                <li>Browser support: bla bla</li>
+                <li></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+    </article>
+    <article>
+      <h1>JSONP - SNIPPETS</h1>
+      <div class="row">
+        <div class="col-sm-6">
+          <h2>Python (Django)</h2>
+          <pre>
+            <code data-language="python">
+  def jsonp_view_wrapper(func):
+    def inner_decorator(request, *args, **kwargs):
+        request.data = request.GET.dict() or None
+        response_data = func(request, *args, **kwargs)
+        return jsonp_response(request, response_data)
+    return wraps(func)(inner_decorator)
+
+
+  def jsonp_response(request, data):
+    return HttpResponse(
+        "%s(%s)" % (request.GET.get('callback'), json.dumps(data)),
+        content_type='application/json'
+    )
+            </code>
+          </pre>
+        </div>
+        <div class="col-sm-6">
+          <h2>Javascript (jQuery)</h2>
+          <pre>
+            <code data-language="javascript">
+  $.extend({
+    getJSONP: function(url, data, callback_fn) {
+      url += '?&callback=?';
+      if ($.isFunction(data)) {
+        callback_fn = data;
+        data = undefined;
+      }
+      $.getJSON(url, data, function(response_data) {
+        if (callback_fn) callback_fn(response_data);
+      });
+    }
+  });
+            </code>
+          </pre>
+        </div>
+      </div>
+    </article>
+
+    <article>
+      <h1>JSONP - EXAMPLES</h1>
+      <div class="jsonp_form_holder">
+
+      </div>
+    </article>
+
+    <article>
+      <h1>iframe</h1>
+      <ul>
+          <li>iframe + postMessage functionality</li>
+
+          <li>Browser support iframe: all modern browsers</li>
+          <li>Browser support postMessage: IE 8+, Opera 9.5+, Safari 4.0+ </li>
+          <li>Methods: GET, POST </li>
+      </ul>
+    </article>
+
+    <article>
+      <h1>iframe - postMessage</h1>
+      <ul>
+          <li>window.postMessage method</li>
+          <li>when called, causes a MessageEvent to be dispatched at the target window</li>
+          <li>event then received by other window</li>
+      </ul>
+    </article>
+
+    <article>
+      <h1>iframe - SNIPPETS</h1>
+      <div class="row">
+        <div class="col-sm-4">
+          <h2>Python (Django)</h2>
+          <pre>
+            <code data-language="python">
+  def cross_domain_post_response(func):
+    def decorator(request, *args, **kwargs):
+        resp = func(request, *args, **kwargs)
+
+        data = {
+            "status_code": resp.status_code,
+            "resp_data": resp.content,
+            "request_path": request.path
+        }
+
+        return render(
+            request,
+            'post_response.html',
+            {'data': json.dumps(data)}
+        )
+
+    return decorator
+
+
+  @require_POST
+  @csrf_exempt
+  @cross_domain_post_response
+  def comment(request):
+    form = PostCommentForm(request.POST, request)
+
+    if not form.is_valid():
+       ....
+
+    return HttpResponse(json.dumps(data))
+            </code>
+          </pre>
+        </div>
+        <div class="col-sm-4">
+          <h2>Javascript</h2>
+          <pre>
+            <code data-language="javascript">
+    function makeCrossDomainPost(url, params) {
+        // Add the iframe with a unique name
+        var iframe = document.createElement('iframe');
+        var uniqueNameOfFrame = 'unique';
+        document.body.appendChild(iframe);
+        iframe.contentWindow.name = uniqueNameOfFrame;
+        iframe.source = 'about:blank';
+        iframe.style.display = 'none';
+
+        // construct a form with hidden inputs, targeting the iframe
+        var form = document.createElement('form');
+        form.action = url;
+        form.method = 'POST';
+
+        // repeat for each parameter
+        for (var param in params) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = param;
+            input.value = params[param];
+            form.appendChild(input);
+        }
+
+        var iframeDocument=(iframe.contentWindow || iframe.contentDocument);
+        if (iframeDocument.document) {
+            iframeDocument=iframeDocument.document;
+        }
+        iframeDocument.body.appendChild(form);
+
+
+        form.submit();
+
+        return false;
+    }
+            </code>
+          </pre>
+        </div>
+
+    <div class="col-sm-4">
+      <div class="row">
+        <h2>Javascript</h2>
+          <pre>
+            <code data-language="javascript">
+  window.addEventListener('message', receiveMessage, false);
+
+  ....
+
+
+  function receiveMessage(e) {
+      if (e.origin != C4ALL_SERVER) {
+          return;
+      }
+
+      ...
+
+  }
+            </code>
+          </pre>
+      </div>
+      <div class="row">
+        <h2>Django template</h2>
+          <pre>
+            <code data-language="javascript">
+{% autoescape on %}
+
+ &lt;script&gt;
+    parent.window.postMessage({{ data|safe }}, "*");
+ &lt;/script&gt;
+
+{% endautoescape %}
+            </code>
+          </pre>
+      </div>
+
+    </div>
+
+      </div>
+    </article>
+
+    <article>
+      <h1>LIVE EXAMPLE</h1>
+      <ul>
+        <li>
+          <p><a href="http://c4all.devsrv.net/" target="_blank"><h2>http://c4all.devsrv.net/</h2></a></p>
+        </li>
+        <li>
+          <p><a href="8sidor.html" target="_blank"><h2>example</h2></a></p>
+        </li>
+      </ul>
+    </article>
+
+    <article>
+      <h1>PROS, CONS AND CONCLUSION</h1>
+    </article>
+
+</section>
+
+</body>
+</html>
