@@ -220,6 +220,161 @@
     </article>
 
 
+    <article>
+      <h1>iframe</h1>
+      <ul>
+          <li>iframe + postMessage functionality</li>
+
+          <li>Browser support iframe: all modern browsers</li>
+          <li>Browser support postMessage: Chrome 3+, Firefox 3+, IE 8+, Opera 9.5+, Safari 4.0+</li>
+          <li>Methods: GET, POST </li>
+      </ul>
+    </article>
+
+    <article>
+      <h1>iframe - postMessage</h1>
+      <ul>
+          <li>window.postMessage method</li>
+          <li>when called, causes a MessageEvent to be dispatched at the target window</li>
+          <li>event then received by other window</li>
+      </ul>
+    </article>
+
+    <article>
+      <h1>iframe - SNIPPETS</h1>
+      <div class="row">
+        <div class="col-sm-4">
+          <h2>Python (Django)</h2>
+          <pre>
+            <code data-language="python">
+  def cross_domain_post_response(func):
+    def decorator(request, *args, **kwargs):
+        resp = func(request, *args, **kwargs)
+
+        data = {
+            "status_code": resp.status_code,
+            "resp_data": resp.content,
+            "request_path": request.path
+        }
+
+        return render(
+            request,
+            'post_response.html',
+            {'data': json.dumps(data)}
+        )
+
+    return decorator
+
+
+  @require_POST
+  @csrf_exempt
+  @cross_domain_post_response
+  def comment(request):
+    form = PostCommentForm(request.POST, request)
+
+    if not form.is_valid():
+       ....
+
+    return HttpResponse(json.dumps(data))
+            </code>
+          </pre>
+        </div>
+        <div class="col-sm-4">
+          <h2>Javascript</h2>
+          <pre>
+            <code data-language="javascript">
+    function makeCrossDomainPost(url, params) {
+        // Add the iframe with a unique name
+        var iframe = document.createElement('iframe');
+        var uniqueNameOfFrame = 'unique';
+        document.body.appendChild(iframe);
+        iframe.contentWindow.name = uniqueNameOfFrame;
+        iframe.source = 'about:blank';
+        iframe.style.display = 'none';
+
+        // construct a form with hidden inputs, targeting the iframe
+        var form = document.createElement('form');
+        form.action = url;
+        form.method = 'POST';
+
+        // repeat for each parameter
+        for (var param in params) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = param;
+            input.value = params[param];
+            form.appendChild(input);
+        }
+
+        var iframeDocument=(iframe.contentWindow || iframe.contentDocument);
+        if (iframeDocument.document) {
+            iframeDocument=iframeDocument.document;
+        }
+        iframeDocument.body.appendChild(form);
+
+
+        form.submit();
+
+        return false;
+    }
+            </code>
+          </pre>
+        </div>
+
+    <div class="col-sm-4">
+      <div class="row">
+        <h2>Javascript</h2>
+          <pre>
+            <code data-language="javascript">
+  window.addEventListener('message', receiveMessage, false);
+
+  ....
+
+
+  function receiveMessage(e) {
+      if (e.origin != C4ALL_SERVER) {
+          return;
+      }
+
+      ...
+
+  }
+            </code>
+          </pre>
+      </div>
+      <div class="row">
+        <h2>Django template</h2>
+          <pre>
+            <code data-language="javascript">
+{% autoescape on %}
+
+ &lt;script&gt;
+    parent.window.postMessage({{ data|safe }}, "*");
+ &lt;/script&gt;
+
+{% endautoescape %}
+            </code>
+          </pre>
+      </div>
+
+    </div>
+
+      </div>
+    </article>
+
+    <article>
+      <h1>iframe LIVE EXAMPLE</h1>
+      <ul>
+        <li>
+          <p><a href="http://c4all.devsrv.net/" target="_blank"><h2>http://c4all.devsrv.net/</h2></a></p>
+        </li>
+        <li>
+          <p><a href="8sidor.html" target="_blank"><h2>example</h2></a></p>
+        </li>
+      </ul>
+    </article>
+
+
 
     <article>
       <h1>COMPARISON</h1>
@@ -249,30 +404,36 @@
                   <th>Browsers</th>
                   <td>ALL</td>
                   <td>Chrome 3+, Firefox 3.5+, Opera 12+, Safari 4+, IE 8+</td>
-                  <td></td>
+                  <td>Chrome 3+, Firefox 3+, IE 8+, Opera 9.5+, Safari 4.0+ </td>
                 </tr>
                 <tr>
                   <th>Credentials sent by default</th>
                   <td>Yes</td>
                   <td>No</td>
-                  <td></td>
+                  <td>Yes</td>
                 </tr>
                 <tr>
                   <th>Origin control</th>
                   <td>No (Credentials are still not sent if Access-Control-Allow-Origin: *)</td>
                   <td>Yes (can be any or specific)</td>
-                  <td></td>
+                  <td>Optional (strongly advised)</td>
                 </tr>
                 <tr>
                   <th>Specific</th>
                   <td>Special response handling on client. Server must return callback id.</td>
                   <td>Server must </td>
-                  <td></td>
+                  <td>Fairly complicated</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+      </div>
+    </article>
+
+    <article>
+      <div class="main-title">
+        <span style="color: #32795c;">Hvala! Pitanja?</span>
       </div>
     </article>
 
